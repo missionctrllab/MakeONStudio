@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MakeON — Pad Editor</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a1a;color:#e0e0e0;display:flex;height:100vh;overflow:hidden}
+
+/* ─── LEFT: Part list ─── */
+.sidebar{width:240px;background:#222;border-right:1px solid #333;overflow-y:auto;flex-shrink:0}
+.sidebar h2{padding:16px;font-size:14px;color:#888;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #333}
+.part-item{padding:10px 16px;cursor:pointer;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;gap:10px;transition:background .15s}
+.part-item:hover{background:#2a2a2a}
+.part-item.active{background:#1B1464;border-left:3px solid #6B8AFF}
+.part-item img{width:40px;height:40px;object-fit:contain;border-radius:4px;background:#fff}
+.part-item .name{font-size:13px;font-weight:500}
+.part-item .cat{font-size:10px;color:#888;text-transform:uppercase}
+.cat-label{padding:10px 16px;font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:1px;background:#1a1a1a;border-bottom:1px solid #333}
+
+/* ─── MIDDLE: Canvas ─── */
+.editor{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.editor-header{padding:12px 20px;background:#222;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between}
+.editor-header h1{font-size:18px;font-weight:600}
+.editor-header .dims{font-size:13px;color:#888;font-family:monospace}
+
+.canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:#111;position:relative;overflow:hidden}
+.canvas-container{position:relative;border:2px dashed #333}
+.canvas-container img{display:block;image-rendering:auto}
+.pad-dot{position:absolute;width:20px;height:20px;border-radius:50%;border:2px solid #fff;cursor:grab;transform:translate(-50%,-50%);z-index:10;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);transition:box-shadow .15s}
+.pad-dot.plus{background:rgba(107,29,42,.9);box-shadow:0 0 8px rgba(107,29,42,.6)}
+.pad-dot.minus{background:rgba(26,26,26,.9);box-shadow:0 0 8px rgba(26,26,26,.5)}
+.pad-dot.neutral{background:rgba(239,245,18,.9);box-shadow:0 0 8px rgba(239,245,18,.5);color:#333;text-shadow:none}
+.pad-dot.channel{background:rgba(107,29,42,.9);box-shadow:0 0 8px rgba(107,29,42,.6);font-size:9px;border-radius:10px;width:auto;min-width:24px;padding:0 4px;height:18px}
+.pad-dot:hover{box-shadow:0 0 16px rgba(255,255,255,.4);transform:translate(-50%,-50%) scale(1.15)}
+.pad-dot.dragging{cursor:grabbing;box-shadow:0 0 20px rgba(255,255,0,.6)}
+.coord-label{position:absolute;font-size:10px;font-family:monospace;color:#fff;background:rgba(0,0,0,.7);padding:1px 4px;border-radius:3px;white-space:nowrap;pointer-events:none;top:22px;left:50%;transform:translateX(-50%)}
+
+/* Size handles */
+.size-handle{position:absolute;background:#E8350F;border:2px solid #fff;cursor:nwse-resize;z-index:5}
+.size-handle.right{width:8px;top:0;bottom:0;right:-8px;cursor:ew-resize;border-radius:0 4px 4px 0}
+.size-handle.bottom{height:8px;left:0;right:0;bottom:-8px;cursor:ns-resize;border-radius:0 0 4px 4px}
+.size-handle.corner{width:12px;height:12px;right:-10px;bottom:-10px;cursor:nwse-resize;border-radius:0 0 4px 0}
+
+/* ─── RIGHT: Properties ─── */
+.props{width:300px;background:#222;border-left:1px solid #333;overflow-y:auto;padding:16px}
+.props h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:10px}
+.prop-group{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #333}
+.prop-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.prop-row label{font-size:12px;color:#aaa;width:50px;flex-shrink:0}
+.prop-row input[type=number]{width:60px;background:#333;border:1px solid #444;color:#fff;padding:4px 6px;font-size:13px;border-radius:3px;font-family:monospace}
+.prop-row input[type=text]{flex:1;background:#333;border:1px solid #444;color:#fff;padding:4px 8px;font-size:13px;border-radius:3px}
+.prop-row select{background:#333;border:1px solid #444;color:#fff;padding:4px 6px;font-size:13px;border-radius:3px}
+
+.pad-list{margin-top:8px}
+.pad-entry{display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:6px 8px;background:#2a2a2a;border-radius:4px}
+.pad-entry .pad-idx{font-size:11px;color:#666;width:16px}
+.pad-entry .pad-pol{font-size:16px;font-weight:700;width:20px;text-align:center;cursor:pointer}
+.pad-entry .pad-pol.plus{color:#6B1D2A}
+.pad-entry .pad-pol.minus{color:#1A1A1A}
+.pad-entry .pad-pol.neutral{color:#EFF512}
+.short-warn{margin-top:12px;padding:10px;background:#4A1A1A;border:1px solid #E84040;border-radius:4px;font-size:12px;color:#F88;display:none}
+.short-warn.show{display:block}
+.pad-entry input{width:48px;background:#333;border:1px solid #444;color:#fff;padding:3px 5px;font-size:12px;border-radius:3px;font-family:monospace;text-align:center}
+.pad-entry .del-pad{color:#666;cursor:pointer;font-size:16px;margin-left:auto;padding:0 4px}
+.pad-entry .del-pad:hover{color:#E84040}
+
+.btn{padding:6px 14px;font-size:12px;font-weight:600;border:none;border-radius:4px;cursor:pointer;transition:all .15s}
+.btn-add{background:#556B2F;color:#fff}
+.btn-add:hover{background:#6B8B3F}
+.btn-export{background:#1B1464;color:#fff;width:100%;padding:10px;font-size:14px;margin-top:12px}
+.btn-export:hover{background:#2B2474}
+.btn-copy{background:#E8350F;color:#fff;width:100%;padding:10px;font-size:14px;margin-top:8px}
+.btn-copy:hover{background:#F84520}
+
+/* Export modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#222;border:1px solid #444;border-radius:8px;padding:24px;width:700px;max-height:80vh;overflow-y:auto}
+.modal h2{margin-bottom:12px;font-size:16px}
+.modal pre{background:#111;padding:16px;border-radius:4px;font-size:11px;overflow-x:auto;white-space:pre-wrap;color:#8F8;font-family:'JetBrains Mono',monospace;max-height:50vh;overflow-y:auto}
+.modal .close{float:right;cursor:pointer;font-size:20px;color:#888}
+.modal .close:hover{color:#fff}
+
+/* Zoom */
+.zoom-controls{position:absolute;bottom:16px;right:16px;display:flex;gap:4px;z-index:20}
+.zoom-btn{width:32px;height:32px;background:#333;border:1px solid #444;color:#fff;font-size:16px;cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center}
+.zoom-btn:hover{background:#444}
+.zoom-label{font-size:11px;color:#888;padding:8px 4px;font-family:monospace}
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <h2>Parts</h2>
+</div>
+
+<div class="editor">
+  <div class="editor-header">
+    <h1 id="partTitle">Select a part</h1>
+    <div class="dims" id="partDims"></div>
+  </div>
+  <div class="canvas-wrap" id="canvasWrap">
+    <div class="canvas-container" id="canvasContainer" style="display:none">
+      <img id="partImg" draggable="false">
+      <div class="size-handle right" id="handleRight"></div>
+      <div class="size-handle bottom" id="handleBottom"></div>
+      <div class="size-handle corner" id="handleCorner"></div>
+    </div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="setZoom(zoom-0.5)">−</button>
+      <span class="zoom-label" id="zoomLabel">3×</span>
+      <button class="zoom-btn" onclick="setZoom(zoom+0.5)">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="props" id="props">
+  <div class="prop-group">
+    <h3>Part Properties</h3>
+    <div class="prop-row">
+      <label>Name</label>
+      <input type="text" id="propName" onchange="updateProp('name',this.value)">
+    </div>
+    <div class="prop-row">
+      <label>Cat</label>
+      <select id="propCat" onchange="updateProp('cat',this.value)">
+        <option value="power">Power</option>
+        <option value="animators">Animators</option>
+        <option value="controls">Controls</option>
+      </select>
+    </div>
+    <div class="prop-row">
+      <label>W</label>
+      <input type="number" id="propW" min="10" max="200" onchange="updateSize()">
+    </div>
+    <div class="prop-row">
+      <label>H</label>
+      <input type="number" id="propH" min="10" max="200" onchange="updateSize()">
+    </div>
+  </div>
+  <div class="prop-group">
+    <h3>Connection Pads</h3>
+    <div id="padList" class="pad-list"></div>
+    <button class="btn btn-add" onclick="addPad()" style="margin-top:8px">+ Add Pad</button>
+  </div>
+  <div class="prop-group">
+    <h3>Instructions</h3>
+    <p style="font-size:12px;color:#999;line-height:1.5">
+      <b>Drag</b> pad dots to reposition<br>
+      Use <b>dropdown</b> to set polarity type<br>
+      <span style="color:#6B1D2A">+</span> <span style="color:#fff">−</span> = power &nbsp; <span style="color:#EFF512">IN/OUT</span> = control<br>
+      <span style="color:#6B1D2A">1IN/1OUT…4OUT</span> = sound channels<br>
+      <b>×</b> removes a pad &nbsp; <b>Double-click</b> adds a pad<br>
+      Drag orange <b>handles</b> to resize part bounds
+    </p>
+    <div class="short-warn" id="shortWarn">Short circuit risk: pads overlap or are too close</div>
+  </div>
+  <button class="btn btn-export" onclick="showExport()">Export JSON</button>
+  <button class="btn btn-copy" onclick="copyExport()">Copy to Clipboard</button>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <span class="close" onclick="document.getElementById('modal').classList.remove('show')">&times;</span>
+    <h2>Pad Configuration Export</h2>
+    <pre id="exportPre"></pre>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───
+const PARTS = {
+  // ── Power ──
+  powerpad:{ name:'Powerpad', cat:'power', w:72, h:80,
+    pads:[{x:13,y:67,pol:'-'},{x:58,y:67,pol:'+'}] },
+  power_box_adaptor:{ name:'Power Box Adaptor', cat:'power', w:44, h:80,
+    pads:[{x:21,y:67,pol:'+'},{x:22,y:73,pol:'-'},{x:4,y:74,pol:'+'},{x:3,y:68,pol:'-'}] },
+  // ── Animators ──
+  glow_light:{ name:'Glow Light', cat:'animators', w:80, h:76,
+    pads:[{x:55,y:58,pol:'+'},{x:23,y:56,pol:'-'}] },
+  buzzer:{ name:'Buzzer', cat:'animators', w:66, h:80,
+    pads:[{x:17,y:21,pol:'+'},{x:36,y:15,pol:'-'}] },
+  motor:{ name:'Motor', cat:'animators', w:80, h:66,
+    pads:[{x:22,y:58,pol:'+'},{x:29,y:54,pol:'-'}] },
+  sound_module_setup:{ name:'Sound Module', cat:'animators', w:80, h:76,
+    pads:[{x:8,y:50,pol:'+'},{x:68,y:35,pol:'-'},
+          {x:12,y:5,pol:'c1i'},{x:28,y:5,pol:'c1o'},
+          {x:44,y:5,pol:'c2i'},{x:60,y:5,pol:'c2o'},
+          {x:12,y:70,pol:'c3i'},{x:28,y:70,pol:'c3o'},
+          {x:44,y:70,pol:'c4i'},{x:60,y:70,pol:'c4o'}] },
+  // ── Controls ──
+  light_sensor_active_night:{ name:'Active NIGHT', cat:'controls', w:74, h:80,
+    pads:[{x:24,y:12,pol:'+'},{x:15,y:68,pol:'+'},{x:59,y:66,pol:'-'},{x:44,y:11,pol:'-'},{x:45,y:57,pol:'in'},{x:47,y:31,pol:'out'}] },
+  light_sensor:{ name:'Active DAY', cat:'controls', w:70, h:80,
+    pads:[{x:62,y:51,pol:'in'},{x:61,y:32,pol:'out'},{x:52,y:15,pol:'-'},{x:54,y:68,pol:'-'},{x:35,y:12,pol:'+'},{x:13,y:61,pol:'+'}] },
+  button:{ name:'Button', cat:'controls', w:80, h:80,
+    pads:[{x:31,y:61,pol:'in'},{x:58,y:54,pol:'out'}] },
+  tilt_switch_vertical:{ name:'Tilt (Vertical)', cat:'controls', w:40, h:80,
+    pads:[{x:11,y:69,pol:'in'},{x:26,y:70,pol:'out'}] },
+  lever_switch_no:{ name:'Click ON', cat:'controls', w:80, h:80,
+    pads:[{x:64,y:68,pol:'in'},{x:16,y:68,pol:'out'}] },
+  lever_switch_nc:{ name:'Click OFF', cat:'controls', w:80, h:80,
+    pads:[{x:64,y:68,pol:'in'},{x:16,y:68,pol:'out'}] },
+  magnet_sensor:{ name:'Magnet Sensor', cat:'controls', w:80, h:76,
+    pads:[{x:25,y:54,pol:'in'},{x:51,y:57,pol:'out'}] },
+  on_off_switch:{ name:'ON/OFF Switch', cat:'controls', w:78, h:80,
+    pads:[{x:30,y:64,pol:'in'},{x:59,y:53,pol:'out'}] },
+  tilt_switch_horizontal:{ name:'Tilt (Horizontal)', cat:'controls', w:28, h:72,
+    pads:[{x:20,y:65,pol:'in'},{x:9,y:7,pol:'out'}] },
+};
+
+// Load icons
+let ICONS = {};
+fetch('data:text/plain,loading').catch(()=>{});
+
+// We'll load icons from the embedded base64 or from file
+async function loadIcons(){
+  // Try loading icons_v2.txt from same directory or prompt user
+  // For simplicity, load from the icon PNGs directly
+  const iconDir = ''; // icons will be embedded below
+}
+
+let currentKey = null;
+let zoom = 3;
+let dragPad = null;
+let dragOffset = {x:0, y:0};
+
+// ─── BUILD SIDEBAR ───
+function buildSidebar(){
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = '<h2>Parts (14)</h2>';
+  const cats = {power:'Power', animators:'Animators', controls:'Controls'};
+  for(const [catKey, catLabel] of Object.entries(cats)){
+    const cl = document.createElement('div');
+    cl.className = 'cat-label';
+    cl.textContent = catLabel;
+    sb.appendChild(cl);
+    for(const [pk, pv] of Object.entries(PARTS)){
+      if(pv.cat !== catKey) continue;
+      const item = document.createElement('div');
+      item.className = 'part-item';
+      item.dataset.key = pk;
+      item.innerHTML = `<img src="${ICONS[pk]||''}" alt="${pk}"><div><div class="name">${pv.name}</div><div class="cat">${pk}</div></div>`;
+      item.onclick = () => selectPart(pk);
+      sb.appendChild(item);
+    }
+  }
+}
+
+// ─── SELECT PART ───
+function selectPart(key){
+  currentKey = key;
+  const p = PARTS[key];
+
+  // Highlight sidebar
+  document.querySelectorAll('.part-item').forEach(el => el.classList.toggle('active', el.dataset.key === key));
+
+  // Header
+  document.getElementById('partTitle').textContent = p.name;
+  updateDimsDisplay();
+
+  // Show canvas
+  const container = document.getElementById('canvasContainer');
+  container.style.display = 'block';
+  const img = document.getElementById('partImg');
+  img.src = ICONS[key] || '';
+  applyZoom();
+
+  // Props
+  document.getElementById('propName').value = p.name;
+  document.getElementById('propCat').value = p.cat;
+  document.getElementById('propW').value = p.w;
+  document.getElementById('propH').value = p.h;
+
+  renderPads();
+}
+
+function updateDimsDisplay(){
+  if(!currentKey) return;
+  const p = PARTS[currentKey];
+  document.getElementById('partDims').textContent = `${p.w} × ${p.h}px · ${p.pads.length} pads`;
+}
+
+// ─── ZOOM ───
+function setZoom(z){
+  zoom = Math.max(1, Math.min(8, z));
+  document.getElementById('zoomLabel').textContent = zoom + '×';
+  applyZoom();
+}
+
+function applyZoom(){
+  if(!currentKey) return;
+  const p = PARTS[currentKey];
+  const container = document.getElementById('canvasContainer');
+  const img = document.getElementById('partImg');
+  const dispW = p.w * zoom;
+  const dispH = p.h * zoom;
+  container.style.width = dispW + 'px';
+  container.style.height = dispH + 'px';
+  img.style.width = dispW + 'px';
+  img.style.height = dispH + 'px';
+  renderPadDots();
+}
+
+// ─── RENDER PAD DOTS ───
+function renderPadDots(){
+  // Remove old
+  document.querySelectorAll('.pad-dot').forEach(el => el.remove());
+  if(!currentKey) return;
+  const p = PARTS[currentKey];
+  const container = document.getElementById('canvasContainer');
+
+  p.pads.forEach((pad, i) => {
+    const dot = document.createElement('div');
+    const isCh = /^c\d[io]$/.test(pad.pol);
+    const polClass = pad.pol === '+' ? 'plus' : pad.pol === '-' ? 'minus' : isCh ? 'channel' : 'neutral';
+    const polLabel = pad.pol === '+' ? '+' : pad.pol === '-' ? '\u2212' : isCh ? (pad.pol[1]+(pad.pol[2]==='i'?'IN':'OUT')) : pad.pol.toUpperCase();
+    dot.className = 'pad-dot ' + polClass;
+    dot.textContent = polLabel;
+    dot.style.left = (pad.x * zoom) + 'px';
+    dot.style.top = (pad.y * zoom) + 'px';
+    dot.dataset.idx = i;
+
+    // Coord label
+    const lbl = document.createElement('div');
+    lbl.className = 'coord-label';
+    lbl.textContent = `(${pad.x}, ${pad.y})`;
+    dot.appendChild(lbl);
+
+    // Drag
+    dot.addEventListener('mousedown', (e) => startDragPad(e, i));
+    dot.addEventListener('touchstart', (e) => startDragPad(e, i), {passive:false});
+
+    container.appendChild(dot);
+  });
+}
+
+// ─── PAD DRAGGING ───
+function startDragPad(e, idx){
+  e.preventDefault();
+  e.stopPropagation();
+  dragPad = idx;
+  const dot = document.querySelector(`.pad-dot[data-idx="${idx}"]`);
+  dot.classList.add('dragging');
+  
+  const moveHandler = (e2) => {
+    e2.preventDefault();
+    const container = document.getElementById('canvasContainer');
+    const rect = container.getBoundingClientRect();
+    const clientX = e2.touches ? e2.touches[0].clientX : e2.clientX;
+    const clientY = e2.touches ? e2.touches[0].clientY : e2.clientY;
+    let px = Math.round((clientX - rect.left) / zoom);
+    let py = Math.round((clientY - rect.top) / zoom);
+    px = Math.max(0, Math.min(PARTS[currentKey].w, px));
+    py = Math.max(0, Math.min(PARTS[currentKey].h, py));
+    PARTS[currentKey].pads[dragPad].x = px;
+    PARTS[currentKey].pads[dragPad].y = py;
+    renderPadDots();
+    renderPads();
+  };
+
+  const upHandler = () => {
+    dragPad = null;
+    document.querySelectorAll('.pad-dot').forEach(d => d.classList.remove('dragging'));
+    document.removeEventListener('mousemove', moveHandler);
+    document.removeEventListener('mouseup', upHandler);
+    document.removeEventListener('touchmove', moveHandler);
+    document.removeEventListener('touchend', upHandler);
+    updateDimsDisplay();
+  };
+
+  document.addEventListener('mousemove', moveHandler);
+  document.addEventListener('mouseup', upHandler);
+  document.addEventListener('touchmove', moveHandler, {passive:false});
+  document.addEventListener('touchend', upHandler);
+}
+
+// ─── SIZE HANDLES ───
+function initSizeHandles(){
+  let resizing = null;
+  let startX, startY, startW, startH;
+
+  ['handleRight','handleBottom','handleCorner'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      if(!currentKey) return;
+      resizing = id;
+      startX = e.clientX;
+      startY = e.clientY;
+      startW = PARTS[currentKey].w;
+      startH = PARTS[currentKey].h;
+    });
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if(!resizing || !currentKey) return;
+    const dx = Math.round((e.clientX - startX) / zoom);
+    const dy = Math.round((e.clientY - startY) / zoom);
+    if(resizing === 'handleRight' || resizing === 'handleCorner'){
+      PARTS[currentKey].w = Math.max(10, startW + dx);
+    }
+    if(resizing === 'handleBottom' || resizing === 'handleCorner'){
+      PARTS[currentKey].h = Math.max(10, startH + dy);
+    }
+    document.getElementById('propW').value = PARTS[currentKey].w;
+    document.getElementById('propH').value = PARTS[currentKey].h;
+    applyZoom();
+    updateDimsDisplay();
+  });
+
+  document.addEventListener('mouseup', () => { resizing = null; });
+}
+
+// ─── CLICK ON CANVAS TO ADD PAD ───
+document.getElementById('canvasContainer').addEventListener('dblclick', (e) => {
+  if(!currentKey) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const px = Math.round((e.clientX - rect.left) / zoom);
+  const py = Math.round((e.clientY - rect.top) / zoom);
+  const defaultPol = PARTS[currentKey].cat === 'controls' ? 'in' : '+';
+  PARTS[currentKey].pads.push({x:px, y:py, pol:defaultPol});
+  renderPadDots();
+  renderPads();
+  updateDimsDisplay();
+});
+
+// ─── RENDER PAD LIST (right panel) ───
+function renderPads(){
+  if(!currentKey) return;
+  const p = PARTS[currentKey];
+  const list = document.getElementById('padList');
+  list.innerHTML = '';
+  const POL_OPTIONS = ['+','-','in','out','c1i','c1o','c2i','c2o','c3i','c3o','c4i','c4o'];
+  const POL_LABELS = {'+':'+','-':'\u2212','in':'IN','out':'OUT','c1i':'1IN','c1o':'1OUT','c2i':'2IN','c2o':'2OUT','c3i':'3IN','c3o':'3OUT','c4i':'4IN','c4o':'4OUT'};
+  p.pads.forEach((pad, i) => {
+    const row = document.createElement('div');
+    row.className = 'pad-entry';
+    const opts = POL_OPTIONS.map(p => `<option value="${p}" ${pad.pol===p?'selected':''}>${POL_LABELS[p]}</option>`).join('');
+    row.innerHTML = `
+      <span class="pad-idx">#${i}</span>
+      <select onchange="setPol(${i},this.value)" style="background:#333;border:1px solid #444;color:#fff;padding:2px 4px;font-size:11px;border-radius:3px;width:60px">${opts}</select>
+      <label style="font-size:11px;color:#888">x</label>
+      <input type="number" value="${pad.x}" onchange="setPadCoord(${i},'x',+this.value)">
+      <label style="font-size:11px;color:#888">y</label>
+      <input type="number" value="${pad.y}" onchange="setPadCoord(${i},'y',+this.value)">
+      <span class="del-pad" onclick="removePad(${i})">×</span>
+    `;
+    list.appendChild(row);
+  });
+  checkShorts();
+}
+
+function setPol(i, val){
+  if(!currentKey) return;
+  PARTS[currentKey].pads[i].pol = val;
+  renderPads();
+  renderPadDots();
+}
+
+function checkShorts(){
+  if(!currentKey) return;
+  const p = PARTS[currentKey];
+  const warn = document.getElementById('shortWarn');
+  let hasShort = false;
+  for(let i = 0; i < p.pads.length; i++){
+    for(let j = i+1; j < p.pads.length; j++){
+      const dx = p.pads[i].x - p.pads[j].x;
+      const dy = p.pads[i].y - p.pads[j].y;
+      if(Math.sqrt(dx*dx + dy*dy) < 8){
+        hasShort = true;
+      }
+    }
+  }
+  warn.classList.toggle('show', hasShort);
+}
+
+function setPadCoord(i, axis, val){
+  if(!currentKey) return;
+  PARTS[currentKey].pads[i][axis] = val;
+  renderPadDots();
+}
+
+function removePad(i){
+  if(!currentKey) return;
+  PARTS[currentKey].pads.splice(i, 1);
+  renderPads();
+  renderPadDots();
+  updateDimsDisplay();
+}
+
+function addPad(){
+  if(!currentKey) return;
+  const p = PARTS[currentKey];
+  const defaultPol = p.cat === 'controls' ? 'in' : '+';
+  p.pads.push({x: Math.round(p.w/2), y: Math.round(p.h/2), pol:defaultPol});
+  renderPads();
+  renderPadDots();
+  updateDimsDisplay();
+}
+
+// ─── PROPS ───
+function updateProp(key, val){
+  if(!currentKey) return;
+  PARTS[currentKey][key] = val;
+  if(key === 'name'){
+    document.getElementById('partTitle').textContent = val;
+    const item = document.querySelector(`.part-item[data-key="${currentKey}"] .name`);
+    if(item) item.textContent = val;
+  }
+}
+
+function updateSize(){
+  if(!currentKey) return;
+  PARTS[currentKey].w = +document.getElementById('propW').value;
+  PARTS[currentKey].h = +document.getElementById('propH').value;
+  applyZoom();
+  updateDimsDisplay();
+}
+
+// ─── EXPORT ───
+function generateExport(){
+  let lines = [];
+  const cats = {power:'Power', animators:'Animators', controls:'Controls'};
+  for(const [catKey, catLabel] of Object.entries(cats)){
+    lines.push(`  // ── ${catLabel} ──`);
+    for(const [pk, pv] of Object.entries(PARTS)){
+      if(pv.cat !== catKey) continue;
+      const padsStr = pv.pads.map(p => `{x:${p.x},y:${p.y},pol:'${p.pol}'}`).join(',');
+      lines.push(`  ${pk}:{ name:'${pv.name}', cat:'${pv.cat}', w:${pv.w}, h:${pv.h}, pads:[${padsStr}] },`);
+    }
+  }
+  return '{\n' + lines.join('\n') + '\n}';
+}
+
+function showExport(){
+  const pre = document.getElementById('exportPre');
+  pre.textContent = generateExport();
+  document.getElementById('modal').classList.add('show');
+}
+
+function copyExport(){
+  const text = generateExport();
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.btn-copy');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy to Clipboard', 1500);
+  });
+}
+
+// ─── LOAD ICONS AND INIT ───
+async function init(){
+  // Try to load icons from icons_v2.txt in same dir or parent
+  const paths = ['icons_v2.txt', '../icons_v2.txt', 'MakeON-Studio-Icons/icons_v2.txt'];
+  let loaded = false;
+  
+  // First try to load from an embedded data URI via a script tag or inline
+  // For standalone use, we'll embed the icon data directly
+  try {
+    // Attempt fetch from a relative path — won't work from file:// but works from server
+    for(const path of paths){
+      try{
+        const resp = await fetch(path);
+        if(resp.ok){
+          ICONS = {};
+          const data = JSON.parse(await resp.text());
+          for(const [k,v] of Object.entries(data)){
+            ICONS[k] = v;
+          }
+          loaded = true;
+          break;
+        }
+      } catch(e){}
+    }
+  } catch(e){}
+
+  if(loaded) aliasIcons();
+
+  if(!loaded){
+    // Fallback: prompt user to load file
+    const notice = document.createElement('div');
+    notice.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#333;padding:24px;border-radius:8px;z-index:200;text-align:center';
+    notice.innerHTML = `
+      <p style="margin-bottom:12px">Load your <b>icons_v2.txt</b> file:</p>
+      <input type="file" id="iconFileInput" accept=".txt,.json" style="margin-bottom:12px">
+      <br><button class="btn btn-export" onclick="loadIconFile(this.parentElement)">Load</button>
+    `;
+    document.body.appendChild(notice);
+    return;
+  }
+
+  buildSidebar();
+  initSizeHandles();
+  selectPart('powerpad');
+}
+
+function aliasIcons(){
+  if(ICONS['lever_switch'] && !ICONS['lever_switch_no']) ICONS['lever_switch_no'] = ICONS['lever_switch'];
+  if(ICONS['lever_switch'] && !ICONS['lever_switch_nc']) ICONS['lever_switch_nc'] = ICONS['lever_switch'];
+}
+
+function loadIconFile(notice){
+  const input = document.getElementById('iconFileInput');
+  if(!input.files.length) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      ICONS = JSON.parse(e.target.result);
+      aliasIcons();
+      notice.remove();
+      buildSidebar();
+      initSizeHandles();
+      selectPart('powerpad');
+    } catch(err){
+      alert('Error parsing file: ' + err.message);
+    }
+  };
+  reader.readAsText(input.files[0]);
+}
+
+init();
+</script>
+</body>
+</html>
