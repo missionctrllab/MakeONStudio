@@ -251,6 +251,9 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;font-weight:400;
 .part-tile .tile-name{font-family:'Inter',sans-serif;
   font-size:7px;font-weight:600;color:var(--ink-2);text-align:center;
   letter-spacing:0.04em;text-transform:uppercase;line-height:1.1}
+.part-tile .tile-price{font-family:'JetBrains Mono',monospace;
+  font-size:8px;font-weight:600;color:var(--terra);text-align:center;
+  margin-top:1px;letter-spacing:0.02em}
 .part-tile .inv-count{
   position:absolute;top:-1px;right:-1px;
   min-width:16px;height:16px;padding:0 3px;
@@ -464,8 +467,9 @@ button,.part-tile,.part,.power-toggle,.ghost-btn{touch-action:manipulation}
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px">TOTAL: <b id="buyTotal">$0.00</b></div>
       <a id="buyCartLink" href="#" target="_blank" style="display:inline-block;padding:10px 24px;background:var(--ink);color:var(--surface);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;font-weight:600">ADD TO CART &rarr;</a>
     </div>
+    <div id="kitSuggestion" style="padding-top:8px"></div>
     <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--stone);text-align:center;padding-top:6px">
-      Ships from <a href="https://makeon.io" target="_blank" style="color:var(--terra)">makeon.io</a> &middot; Conductive tape included with every kit
+      Ships from <a href="https://www.makeon.xyz" target="_blank" style="color:var(--terra)">makeon.xyz</a> &middot; Conductive tape included with every kit
     </div>
   </div>
 </div>
@@ -584,67 +588,68 @@ const I = {"battery": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAADICAY
 // ============== MATERIALS ==============
 // Dimensions derived from icon content bounding boxes (max dim = 80px)
 // Shopify store base URL
-const SHOP_URL = 'https://makeon.io';
+const SHOP_URL = 'https://www.makeon.xyz';
 
 // Accessories & materials catalog (not placeable on canvas, used in recipes)
 const ACC = {
-  battery_cr2032:{ name:'Powerpad Coincell CR2032', ean:'6156147156194', handle:'makeon-powerpad-coincell', price:'5.00' },
-  launchpad:{ name:'Launchpad for Sound Module', ean:'6156146278262', handle:'makeon-launchpad-sound-module', price:'5.00' },
-  sound_module_board:{ name:'Sound Module (board only)', ean:'6156147712734', handle:'makeon-sound-module', price:'18.00' },
+  battery_cr2032:{ name:'Powerpad Coincell CR2032', ean:'6156147156194', handle:'makeon-powerpad-coincell', price:'5.00', vid:'45312984875055' },
+  launchpad:{ name:'Launchpad for Sound Module', ean:'6156146278262', handle:'makeon-launchpad-sound-module', price:'5.00', vid:'45312984940591' },
+  sound_module_board:{ name:'Sound Module (board only)', ean:'6156147712734', handle:'makeon-sound-module', price:'18.00', vid:'45312985071663' },
+  tape_roll:{ name:'Conductive Tape Roll', ean:'', handle:'makeon-conductive-tape', price:'4.00', vid:'45312985137199' },
 };
 // Kits catalog
 const KITS = {
-  glow_kit:{ name:'Make It GLOW Kit', ean:'6156147090047', handle:'makeon-make-it-glow-kit', price:'14.95',
+  glow_kit:{ name:'Make It GLOW Kit', ean:'6156147090047', handle:'make-it-glow-kit', price:'24.95', vid:'45099492900911',
     includes:['powerpad','glow_light'] },
-  glow_sense_kit:{ name:'Make It Glow Sense Kit', ean:'6156147898865', handle:'makeon-make-it-glow-sense-kit', price:'24.95',
+  glow_sense_kit:{ name:'Make It Glow + Sense Kit', ean:'6156147898865', handle:'makeon-make-it-glow-sense-kit', price:'29.95', vid:'45312990609455',
     includes:['powerpad','glow_light','light_sensor'] },
-  multiplug_power:{ name:'Multiplug + Power Box', ean:'6156148211298', handle:'makeon-multiplug-power-box', price:'9.00',
+  multiplug_power:{ name:'Multiplug + Power Box', ean:'6156148211298', handle:'makeon-multiplug-power-box', price:'9.00', vid:'45312990806063',
     includes:['power_box_adaptor','powerpad'] },
 };
 
 const M = {
   // ── Power ──────────────────────────────────────────────────
   powerpad:{  name:'Battery Box',      cat:'power',    icon:I.powerpad,       iconBack:I.battery, w:76,h:80,
-              handle:'makeon-battery-box', price:'4.50', tokens:50, ean:'6156146076011',
+              handle:'makeon-battery-box', price:'4.50', tokens:50, vid:'45312832569391', ean:'6156146076011',
               pads:[{x:62,y:64,pol:'+out'},{x:13,y:65,pol:'-out'}] },
   power_box_adaptor:{ name:'Multi Adaptor', cat:'power', icon:I.power_box_adaptor, iconBack:I.power_box_adaptor_back, w:61,h:80,
-              handle:'makeon-multi-adaptor', price:'6.00', tokens:65, ean:'6156146581522',
+              handle:'makeon-multi-adaptor', price:'6.00', tokens:65, vid:'45312968097839', ean:'6156146581522',
               pads:[{x:43,y:11,pol:'+io'},{x:44,y:69,pol:'+io'},{x:10,y:53,pol:'+io'},{x:58,y:21,pol:'+io'},{x:23,y:11,pol:'-io'},{x:11,y:44,pol:'-io'},{x:58,y:30,pol:'-io'},{x:22,y:69,pol:'-io'}] },
   battery_aaa:{ name:'AAA Battery',    cat:'power',    icon:I.battery_aaa,    w:24,h:80,
-              handle:'makeon-battery-aaa', price:'2.00', tokens:20, ean:'',
+              handle:'makeon-battery-aaa', price:'2.00', tokens:20, vid:'', ean:'',
               pads:[{x:3,y:14,pol:'-io'},{x:20,y:14,pol:'-io'},{x:13,y:19,pol:'-io'},{x:10,y:4,pol:'-io'},{x:20,y:8,pol:'+io'},{x:3,y:8,pol:'+io'},{x:6,y:5,pol:'+io'},{x:17,y:18,pol:'+io'}] },
   battery_box_aaa:{ name:'AAA Battery Box', cat:'power', icon:I.battery_box_aaa, w:28,h:80,
-              handle:'makeon-battery-box-aaa', price:'3.00', tokens:30, ean:'',
+              handle:'makeon-battery-box-aaa', price:'3.00', tokens:30, vid:'', ean:'',
               pads:[{x:10,y:4,pol:'+out'},{x:14,y:4,pol:'-out'}] },
   // ── Animators ──────────────────────────────────────────────
   glow_light:{ name:'Glow Light', cat:'animator', icon:I.glow_light,     iconBack:I.glow_light_back,   w:80,h:73,
-              handle:'makeon-glow-light', price:'3.25', tokens:35, ean:'6156147167176',
+              handle:'makeon-glow-light', price:'3.25', tokens:35, vid:'45312968130607', ean:'6156147167176',
               pads:[{x:58,y:54,pol:'+in'},{x:21,y:54,pol:'-in'}] },
   glow_light_color:{ name:'Glow Light Color', cat:'animator', icon:I.glow_light, iconBack:I.glow_light_back, w:80,h:73,
-              handle:'makeon-glow-light-color', price:'3.25', tokens:35, ean:'6156157810864',
+              handle:'makeon-glow-light-color', price:'3.25', tokens:35, vid:'45312968228911', ean:'6156157810864',
               pads:[{x:21,y:53,pol:'-in'},{x:57,y:53,pol:'+in'}],
               colors:['orange','red','green','yellow','pink','blue','aqua','purple'] },
   buzzer:{    name:'Buzzer',           cat:'animator', icon:I.buzzer,         iconBack:I.buzzer_back,       w:61,h:80,
-              handle:'makeon-buzzer', price:'5.00', tokens:55, ean:'6156147828831',
+              handle:'makeon-buzzer', price:'5.00', tokens:55, vid:'45312968392751', ean:'6156147828831',
               pads:[{x:44,y:61,pol:'+in'},{x:17,y:62,pol:'-in'}] },
   motor:{     name:'Motor',            cat:'animator', icon:I.motor,          iconBack:I.motor_back,        w:53,h:80,
-              handle:'makeon-motor', price:'6.00', tokens:65, ean:'6156147781723',
+              handle:'makeon-motor', price:'6.00', tokens:65, vid:'45312968425519', ean:'6156147781723',
               pads:[{x:33,y:7,pol:'-in'},{x:45,y:7,pol:'+in'}] },
   sound_module_setup:{ name:'Sound Module', cat:'animator', icon:I.sound_module_setup, w:91,h:120,
-              handle:'makeon-sound-module-setup', price:'24.95', tokens:275, ean:'6156148650660',
+              handle:'makeon-sound-module-setup', price:'24.95', tokens:275, vid:'45312968491055', ean:'6156148650660',
               pads:[{x:18,y:72,pol:'+out'},{x:17,y:79,pol:'+out'},{x:17,y:87,pol:'+out'},{x:17,y:95,pol:'+out'},
                     {x:14,y:68,pol:'+in'},{x:14,y:75,pol:'+in'},{x:13,y:92,pol:'+in'},{x:13,y:83,pol:'+in'},
                     {x:78,y:72,pol:'+out'},{x:77,y:79,pol:'+out'},{x:77,y:87,pol:'+out'},{x:78,y:95,pol:'+out'},
                     {x:78,y:67,pol:'+in'},{x:79,y:75,pol:'+in'},{x:78,y:83,pol:'+in'},{x:79,y:91,pol:'+in'}] },
   sound_wings:{ name:'Sound Wings',   cat:'animator', icon:I.sound_wings,    w:80,h:67,
-              handle:'makeon-sound-wings', price:'8.00', tokens:90, ean:'',
+              handle:'makeon-sound-wings', price:'8.00', tokens:90, vid:'', ean:'',
               pads:[{x:5,y:22,pol:'+out'},{x:5,y:36,pol:'+out'},{x:5,y:49,pol:'+out'},{x:5,y:63,pol:'+out'},
                     {x:74,y:21,pol:'+out'},{x:75,y:35,pol:'+out'},{x:75,y:49,pol:'+out'},{x:75,y:63,pol:'+out'},
                     {x:5,y:15,pol:'~in'},{x:5,y:29,pol:'~in'},{x:5,y:42,pol:'~in'},{x:5,y:56,pol:'~in'},
                     {x:74,y:14,pol:'~in'},{x:74,y:28,pol:'~in'},{x:75,y:42,pol:'~in'},{x:74,y:56,pol:'~in'},
                     {x:35,y:8,pol:'-in'},{x:43,y:7,pol:'+in'}] },
   sound_set:{ name:'Sound Set',       cat:'animator', icon:I.sound_set,      w:52,h:120,
-              handle:'makeon-sound-module-setup', price:'24.95', tokens:275, ean:'6156148650660',
+              handle:'makeon-sound-module-setup', price:'24.95', tokens:275, vid:'45312968491055', ean:'6156148650660',
               pads:[{x:3,y:118,pol:'+out'},{x:3,y:109,pol:'+out'},{x:3,y:100,pol:'+out'},{x:3,y:91,pol:'+out'},
                     {x:48,y:90,pol:'+out'},{x:48,y:100,pol:'+out'},{x:48,y:109,pol:'+out'},{x:48,y:117,pol:'+out'},
                     {x:4,y:87,pol:'~in'},{x:3,y:96,pol:'~in'},{x:3,y:104,pol:'~in'},{x:3,y:113,pol:'~in'},
@@ -653,31 +658,31 @@ const M = {
                     {x:30,y:65,pol:'-out'},{x:20,y:61,pol:'-out'},{x:24,y:76,pol:'-out'},{x:27,y:76,pol:'+out'}] },
   // ── Controls ───────────────────────────────────────────────
   button:{    name:'Button',           cat:'control', icon:I.button,         iconBack:I.button_back,       w:80,h:72,
-              handle:'makeon-button', price:'4.00', tokens:45, ean:'6156147353302',
+              handle:'makeon-button', price:'4.00', tokens:45, vid:'45312974061615', ean:'6156147353302',
               pads:[{x:22,y:49,pol:'~io'},{x:57,y:49,pol:'~io'}] },
   tilt_switch_vertical:{ name:'Tilt Vertical', cat:'control', icon:I.tilt_switch_vertical, iconBack:I.tilt_switch_vertical_back, w:32,h:80,
-              handle:'makeon-tilt-switch-vertical', price:'4.00', tokens:45, ean:'6156147361321',
+              handle:'makeon-tilt-switch-vertical', price:'4.00', tokens:45, vid:'45312974127151', ean:'6156147361321',
               pads:[{x:8,y:69,pol:'~io'},{x:23,y:69,pol:'~io'}] },
   tilt_switch_horizontal:{ name:'Tilt Horizontal', cat:'control', icon:I.tilt_switch_horizontal, iconBack:I.tilt_switch_horizontal_back, w:32,h:80,
-              handle:'makeon-tilt-switch-horizontal', price:'4.00', tokens:45, ean:'',
+              handle:'makeon-tilt-switch-horizontal', price:'4.00', tokens:45, vid:'45312974159919', ean:'',
               pads:[{x:16,y:9,pol:'~io'},{x:16,y:72,pol:'~io'}] },
   lever_switch_no:{ name:'Click ON',  cat:'control', icon:I.lever_switch,   iconBack:I.lever_switch_back, w:78,h:80,
-              handle:'makeon-lever-switch', price:'6.00', tokens:65, ean:'6156147369327',
+              handle:'makeon-lever-switch', price:'6.00', tokens:65, vid:'45312974192687', ean:'6156147369327',
               pads:[{x:15,y:64,pol:'~in'},{x:62,y:65,pol:'~out'}] },
   lever_switch_nc:{ name:'Click OFF',  cat:'control', icon:I.lever_switch,   iconBack:I.lever_switch_back, w:78,h:80,
-              handle:'makeon-lever-switch', price:'6.00', tokens:65, ean:'6156147369327',
+              handle:'makeon-lever-switch', price:'6.00', tokens:65, vid:'45312974192687', ean:'6156147369327',
               pads:[{x:39,y:64,pol:'~out'},{x:14,y:64,pol:'~in'}] },
   magnet_sensor:{ name:'Magnet Sensor', cat:'control', icon:I.magnet_sensor, iconBack:I.magnet_sensor_back, w:75,h:80,
-              handle:'makeon-magnet-sensor', price:'5.00', tokens:55, ean:'6156147436470',
+              handle:'makeon-magnet-sensor', price:'5.00', tokens:55, vid:'45312984842287', ean:'6156147436470',
               pads:[{x:19,y:57,pol:'~io'},{x:55,y:57,pol:'~io'}] },
   on_off_switch:{ name:'Switch (Slide)', cat:'control', icon:I.on_off_switch, iconBack:I.on_off_switch_back, w:80,h:78,
-              handle:'makeon-switch-slide', price:'4.00', tokens:45, ean:'6156147438405',
+              handle:'makeon-switch-slide', price:'4.00', tokens:45, vid:'45312984809519', ean:'6156147438405',
               pads:[{x:19,y:59,pol:'~io'},{x:60,y:59,pol:'~io'}] },
   light_sensor:{ name:'Light Sensor - Day ACTIVE',  cat:'control', icon:I.light_sensor,   w:72,h:80,
-              handle:'makeon-light-sensor-day', price:'7.00', tokens:80, ean:'6156147352381',
+              handle:'makeon-light-sensor-day', price:'7.00', tokens:80, vid:'45312973996079', ean:'6156147352381',
               pads:[{x:11,y:67,pol:'+in'},{x:61,y:66,pol:'-in'},{x:25,y:13,pol:'+out'},{x:47,y:14,pol:'-out'}] },
   light_sensor_active_night:{ name:'Light Sensor - Night ACTIVE', cat:'control', icon:I.light_sensor_active_night, iconBack:I.light_sensor_active_night_back, w:72,h:80,
-              handle:'makeon-light-sensor-night', price:'7.00', tokens:80, ean:'6156147288239',
+              handle:'makeon-light-sensor-night', price:'7.00', tokens:80, vid:'45312973963311', ean:'6156147288239',
               pads:[{x:47,y:14,pol:'-out'},{x:25,y:13,pol:'+out'},{x:11,y:66,pol:'+in'},{x:60,y:67,pol:'-in'}] },
 };
 
@@ -949,7 +954,8 @@ function buildPartsBar(){
       tile.innerHTML=
         '<div class="inv-count" data-count-for="'+t+'">'+(inventory[t]||0)+'</div>'+
         '<img src="'+m.icon+'">'+
-        '<div class="tile-name">'+m.name+'</div>';
+        '<div class="tile-name">'+m.name+'</div>'+
+        (m.price ? '<div class="tile-price">\u20ac'+m.price+'</div>' : '');
       tile.onclick=()=>addPart(t);
       row.appendChild(tile);
     });
@@ -1048,8 +1054,8 @@ function renderPart(p){
       padsHtml+
     '</div>'+
     '<div class="part-actions" style="display:flex;gap:2px;justify-content:center;margin-top:1px;">'+
-      '<button class="part-btn part-btn-rotate" title="Rotate 90°" data-action="rotate" style="font-size:11px;line-height:1;padding:2px 5px;border:1px solid rgba(0,0,0,.15);background:rgba(255,255,255,.85);border-radius:0;cursor:pointer;color:#555;font-family:'JetBrains Mono',monospace;">&#x21BB;</button>'+
-      '<button class="part-btn part-btn-flip" title="Flip" data-action="flip" style="font-size:11px;line-height:1;padding:2px 5px;border:1px solid rgba(0,0,0,.15);background:rgba(255,255,255,.85);border-radius:0;cursor:pointer;color:#555;font-family:'JetBrains Mono',monospace;">&#x21C4;</button>'+
+      '<button class="part-btn part-btn-rotate" title="Rotate 90°" data-action="rotate" style="font-size:11px;line-height:1;padding:2px 5px;border:1px solid rgba(0,0,0,.15);background:rgba(255,255,255,.85);border-radius:0;cursor:pointer;color:#555;font-family:\'JetBrains Mono\',monospace;">&#x21BB;</button>'+
+      '<button class="part-btn part-btn-flip" title="Flip" data-action="flip" style="font-size:11px;line-height:1;padding:2px 5px;border:1px solid rgba(0,0,0,.15);background:rgba(255,255,255,.85);border-radius:0;cursor:pointer;color:#555;font-family:\'JetBrains Mono\',monospace;">&#x21C4;</button>'+
     '</div>'+
     '<div class="label">'+m.name+(flipped?' ⇄':'')+'</div>';
 
@@ -2153,19 +2159,19 @@ function openPartExportPanel(){
   let html = '<div style="position:fixed;inset:0;background:rgba(10,10,10,.85);z-index:200;display:flex;flex-direction:column;align-items:center;padding:60px 16px;overflow-y:auto" id="partExportPanel">';
   html += '<div style="background:var(--surface);border:1px solid var(--ink);width:100%;max-width:600px;padding:20px">';
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">';
-  html += '<span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--ink)">EXPORT PARTS</span>';
-  html += '<button onclick="document.getElementById('partExportPanel').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink)">&times;</button>';
+  html += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:3px;color:var(--ink)">EXPORT PARTS</span>';
+  html += '<button onclick="document.getElementById(\'partExportPanel\').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink)">&times;</button>';
   html += '</div>';
   html += '<div style="display:flex;gap:6px;margin-bottom:14px">';
-  html += '<button class="ghost-btn ghost-btn-accent" onclick="exportAllPartsPNG();document.getElementById('partExportPanel').remove()">Export All</button>';
-  html += '<button class="ghost-btn ghost-btn-accent" onclick="exportCircuitPNG();document.getElementById('partExportPanel').remove()">Export Circuit</button>';
+  html += '<button class="ghost-btn ghost-btn-accent" onclick="exportAllPartsPNG();document.getElementById(\'partExportPanel\').remove()">Export All</button>';
+  html += '<button class="ghost-btn ghost-btn-accent" onclick="exportCircuitPNG();document.getElementById(\'partExportPanel\').remove()">Export Circuit</button>';
   html += '</div>';
   html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
   types.forEach(t=>{
     const m = M[t];
-    html += '<div style="width:80px;border:1px solid var(--line);padding:8px;cursor:pointer;text-align:center;transition:border-color .15s" onclick="exportPartPNG(''+t+'');this.style.borderColor='var(--terra)'" onmouseenter="this.style.borderColor='var(--ink)'" onmouseleave="this.style.borderColor='var(--line)'">';
+    html += '<div style="width:80px;border:1px solid var(--line);padding:8px;cursor:pointer;text-align:center;transition:border-color .15s" onclick="exportPartPNG(\''+t+'\');this.style.borderColor=\'var(--terra)\'" onmouseenter="this.style.borderColor=\'var(--ink)\'" onmouseleave="this.style.borderColor=\'var(--line)\'">';
     html += '<img src="data:image/png;base64,'+m.icon+'" style="width:40px;height:40px;object-fit:contain;display:block;margin:0 auto 4px">';
-    html += '<span style="font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink-2)">'+m.name+'</span>';
+    html += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:7px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink-2)">'+m.name+'</span>';
     html += '</div>';
   });
   html += '</div></div></div>';
@@ -2329,8 +2335,11 @@ function openBuyPanel(){
     list.innerHTML='<div style="text-align:center;padding:20px;font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--stone)">Place parts on the canvas first, then buy them here.</div>';
     document.getElementById('buyTotal').textContent='\u20ac0.00';
     document.getElementById('buyCartLink').href='#';
+    document.getElementById('kitSuggestion').innerHTML='';
     return;
   }
+  // Deduplicate variant IDs (multiple part types may share same product)
+  const vidMap=new Map();
   counts.forEach((qty,type)=>{
     const m=M[type]; if(!m) return;
     const price=parseFloat(m.price||'0');
@@ -2339,7 +2348,7 @@ function openBuyPanel(){
     const lineTokens=tokens*qty;
     total+=lineTotal;
     totalTokens+=lineTokens;
-    if(m.handle) cartItems.push({handle:m.handle, qty});
+    if(m.vid){ vidMap.set(m.vid, (vidMap.get(m.vid)||0)+qty); }
     const row=document.createElement('div');
     row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line-soft);background:var(--bg)';
     row.innerHTML='<div style="flex:1;font-family:\'Outfit\',sans-serif;font-size:13px;color:var(--ink)">'+m.name+'</div>'+
@@ -2349,14 +2358,65 @@ function openBuyPanel(){
       '<a href="'+SHOP_URL+'/products/'+m.handle+'" target="_blank" style="font-family:\'JetBrains Mono\',monospace;font-size:8px;letter-spacing:1px;color:var(--terra);text-decoration:none">VIEW</a>';
     list.appendChild(row);
   });
+  // Add conductive tape (1 roll per 4 connections)
+  const tapeRolls=Math.max(1, Math.ceil(conns.length/4));
+  if(conns.length>0 && ACC.tape_roll){
+    const tapePrice=parseFloat(ACC.tape_roll.price)*tapeRolls;
+    total+=tapePrice;
+    if(ACC.tape_roll.vid) vidMap.set(ACC.tape_roll.vid, (vidMap.get(ACC.tape_roll.vid)||0)+tapeRolls);
+    const tRow=document.createElement('div');
+    tRow.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line-soft);background:var(--bg)';
+    tRow.innerHTML='<div style="flex:1;font-family:\'Outfit\',sans-serif;font-size:13px;color:var(--ink)">Conductive Tape Roll</div>'+
+      '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--stone)">&times;'+tapeRolls+'</div>'+
+      '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:600;min-width:50px;text-align:right">\u20ac'+tapePrice.toFixed(2)+'</div>'+
+      '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:var(--stone);min-width:40px;text-align:right"></div>'+
+      '<a href="'+SHOP_URL+'/products/'+ACC.tape_roll.handle+'" target="_blank" style="font-family:\'JetBrains Mono\',monospace;font-size:8px;letter-spacing:1px;color:var(--terra);text-decoration:none">VIEW</a>';
+    list.appendChild(tRow);
+  }
 
-  document.getElementById('buyTotal').textContent='\u20ac'+total.toFixed(2)+' / '+totalTokens+'\u25c6';
+  document.getElementById('buyTotal').textContent='\u20ac'+total.toFixed(2);
   // Build Shopify cart permalink: /cart/variant_id:qty,...
-  // Since we don't have variant IDs yet, link to collections page
-  document.getElementById('buyCartLink').href=SHOP_URL+'/collections/makeon-parts';
+  const cartParts=[];
+  vidMap.forEach((qty,vid)=>{ if(vid) cartParts.push(vid+':'+qty); });
+  const cartUrl=cartParts.length ? SHOP_URL+'/cart/'+cartParts.join(',') : SHOP_URL+'/collections/makeon-parts';
+  document.getElementById('buyCartLink').href=cartUrl;
+  // Kit suggestions
+  suggestKits(counts, total);
   document.getElementById('buyDrawer').setAttribute('aria-hidden','false');
 }
 function closeBuy(){ document.getElementById('buyDrawer').setAttribute('aria-hidden','true'); }
+
+function suggestKits(counts, partsTotal){
+  const box=document.getElementById('kitSuggestion');
+  if(!box) return;
+  box.innerHTML='';
+  const usedTypes=new Set(counts.keys());
+  // Check each kit
+  const matches=[];
+  Object.entries(KITS).forEach(([k,kit])=>{
+    const allPresent=kit.includes.every(t=>usedTypes.has(t));
+    if(!allPresent) return;
+    // Calculate individual total for kit parts
+    let indivTotal=0;
+    kit.includes.forEach(t=>{ const m=M[t]; if(m) indivTotal+=parseFloat(m.price||'0'); });
+    const kitPrice=parseFloat(kit.price);
+    if(kitPrice<indivTotal){
+      matches.push({key:k, ...kit, indivTotal, savings:(indivTotal-kitPrice).toFixed(2)});
+    }
+  });
+  if(!matches.length) return;
+  matches.forEach(kit=>{
+    const card=document.createElement('div');
+    card.style.cssText='border:2px solid var(--terra);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px';
+    card.innerHTML=
+      '<div style="flex:1">'+
+        '<div style="font-family:\'Outfit\',sans-serif;font-size:12px;font-weight:700;color:var(--ink)">\u2728 '+kit.name+'</div>'+
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:var(--stone);margin-top:2px">Includes '+kit.includes.map(t=>M[t]?M[t].name:t).join(' + ')+' &mdash; save \u20ac'+kit.savings+'</div>'+
+      '</div>'+
+      '<a href="'+SHOP_URL+'/products/'+kit.handle+'" target="_blank" style="flex-shrink:0;padding:8px 14px;background:var(--terra);color:#fff;font-family:\'JetBrains Mono\',monospace;font-size:9px;letter-spacing:1px;text-decoration:none;font-weight:700">\u20ac'+parseFloat(kit.price).toFixed(2)+' &rarr;</a>';
+    box.appendChild(card);
+  });
+}
 
 function openSaves(){
   renderSaveList();
@@ -2590,9 +2650,9 @@ function buildRecipes(){
         {app:'object',name:'Tumble Night Light',desc:'A small object that glows when picked up or tilted — set it down and it sleeps. Lift it and it wakes.',meaning:'Movement is the switch. Stillness is rest, motion is awareness.'}
       );
       if(a==='buzzer') ideas.push(
-        {app:'wearable',name:'Movement Alert Band',desc:'Buzzes when tilted past a threshold — wear it as a posture coach or a don't-drop-it alarm.',meaning:'Sound guards against falling. The buzz is a warning.'},
+        {app:'wearable',name:'Movement Alert Band',desc:'Buzzes when tilted past a threshold — wear it as a posture coach or a don\'t-drop-it alarm.',meaning:'Sound guards against falling. The buzz is a warning.'},
         {app:'wall',name:'Tilt Alarm Panel',desc:'Mount on a door or gate — when it swings open, the tilt triggers a sound.',meaning:'The buzz marks a boundary crossed. Movement detected.'},
-        {app:'object',name:'Don't Tip It Game',desc:'A game object that buzzes when tilted — steady hands win, shaky hands lose.',meaning:'The buzz is a judge. Precision vs. chaos.'}
+        {app:'object',name:'Don\'t Tip It Game',desc:'A game object that buzzes when tilted — steady hands win, shaky hands lose.',meaning:'The buzz is a judge. Precision vs. chaos.'}
       );
       if(a==='motor') ideas.push(
         {app:'object',name:'Rocking Kinetic Toy',desc:'Tilt to start a motor spinning — a kinetic desk toy that responds to how you hold it.',meaning:'Your hand movement becomes mechanical energy. Input becomes output.'},
@@ -2603,7 +2663,7 @@ function buildRecipes(){
     // MAGNET SENSOR combos
     if(c==='magnet_sensor'){
       if(a==='glow_light') ideas.push(
-        {app:'wearable',name:'Secret Handshake Pin',desc:'Hide a magnet in your sleeve. When you touch someone's badge, their light activates. Invisible connection.',meaning:'Proximity without contact. The magnet is a hidden key, the light is the lock opening.'},
+        {app:'wearable',name:'Secret Handshake Pin',desc:'Hide a magnet in your sleeve. When you touch someone\'s badge, their light activates. Invisible connection.',meaning:'Proximity without contact. The magnet is a hidden key, the light is the lock opening.'},
         {app:'wall',name:'Magic Wand Wall',desc:'Wave a magnet near the wall and hidden lights appear — an interactive surface activated by an invisible force.',meaning:'The wand reveals what is hidden. Magic as metaphor for discovery.'},
         {app:'object',name:'Magnetic Reveal Card',desc:'A card with a hidden sensor. Place a magnetic object on it and a light appears — a surprise reveal.',meaning:'The magnet completes the circuit. Two things must come together to create light.'}
       );
@@ -2650,7 +2710,7 @@ function buildRecipes(){
       );
       if(a==='sound_module_setup') ideas.push(
         {app:'object',name:'Ambient Sound Box',desc:'Switch on for continuous ambient audio — rain, forest, white noise. Switch off for silence.',meaning:'Sound fills space. The switch controls atmosphere.'},
-        {app:'wall',name:'Mood Audio Panel',desc:'A wall panel that plays ambient sound on switch — transform a room's feeling instantly.',meaning:'The room has a voice. The switch gives it permission to speak.'}
+        {app:'wall',name:'Mood Audio Panel',desc:'A wall panel that plays ambient sound on switch — transform a room\'s feeling instantly.',meaning:'The room has a voice. The switch gives it permission to speak.'}
       );
     }
 
@@ -3053,7 +3113,7 @@ function renderRecipeGrid(){
         '<div style="flex:1;min-width:0">'+
           '<div class="recipe-card-name">'+r.name+' <span class="recipe-card-diff">'+stars+'</span></div>'+
           '<div class="recipe-card-desc">'+r.description+'</div>'+
-          (r.inspiration?'<div style="font-family:'Inter',sans-serif;font-size:11px;color:var(--ink);font-style:italic;line-height:1.45;margin:4px 0;padding:6px 10px;border-left:2px solid var(--ink);background:var(--whisper,#f5f5f5)">'+r.inspiration+'</div>':'')+
+          (r.inspiration?'<div style="font-family:\'Inter\',sans-serif;font-size:11px;color:var(--ink);font-style:italic;line-height:1.45;margin:4px 0;padding:6px 10px;border-left:2px solid var(--ink);background:var(--whisper,#f5f5f5)">'+r.inspiration+'</div>':'')+
           (r.application?'<span style="display:inline-block;padding:1px 6px;font-size:8px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;border:1px solid var(--ink);margin-right:4px">'+r.application+'</span>':'')+
           bridgeHtml+
           pathsLink+
