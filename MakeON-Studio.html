@@ -2753,7 +2753,7 @@ function buildRecipes(){
     return [];
   }
   function pwPadId(ps){ return ps.id==='coincell' ? 1 : 100; }
-  const pwSources = [{id:'coincell'},{id:'aaa'}];
+  const pwSources = [{id:'coincell',parts:['powerpad']},{id:'aaa',parts:['power_box_adaptor','powerpad']}];
 
   // ── 1. DIRECT: Power → Animator (beginner) ──
   // These get simple "what it could be" ideas
